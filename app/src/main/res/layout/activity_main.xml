@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient">
+
+    <!-- Ảnh gia đình làm nền -->
+    <ImageView
+        android:id="@+id/bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null" />
+
+    <!-- Lớp tối nhẹ phía dưới để chữ dễ đọc -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/scrim" />
+
+    <!-- Đồng hồ + ngày (góc trái trên) -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="top|start"
+        android:layout_margin="48dp">
+        <TextView
+            android:id="@+id/clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="96sp"
+            android:textColor="@color/text"
+            android:fontFamily="sans-serif-light"
+            android:shadowColor="#99000000" android:shadowRadius="12" android:shadowDy="2"
+            android:text="00:00" />
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:textColor="@color/text_dim"
+            android:shadowColor="#99000000" android:shadowRadius="8"
+            android:text="Thứ hai, 1 tháng 1" />
+    </LinearLayout>
+
+    <!-- Thời tiết (góc phải trên) -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:layout_gravity="top|end"
+        android:layout_margin="48dp">
+        <TextView
+            android:id="@+id/weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="40sp"
+            android:textColor="@color/text"
+            android:shadowColor="#99000000" android:shadowRadius="10"
+            android:text="🌡️ --°" />
+        <TextView
+            android:id="@+id/weatherSub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textColor="@color/text_dim"
+            android:shadowColor="#99000000" android:shadowRadius="8"
+            android:text="Hà Nội" />
+    </LinearLayout>
+
+    <!-- Nhãn chế độ trẻ em -->
+    <TextView
+        android:id="@+id/kidsBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="56dp"
+        android:background="@drawable/badge"
+        android:paddingHorizontal="20dp" android:paddingVertical="8dp"
+        android:textColor="#FFFFFF" android:textSize="18sp"
+        android:text="👶 Chế độ trẻ em đang bật"
+        android:visibility="gone" />
+
+    <!-- Lưới app + nút ở dưới -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom"
+        android:paddingHorizontal="40dp"
+        android:paddingBottom="28dp">
+
+        <TextView
+            android:id="@+id/empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/text_dim"
+            android:textSize="20sp"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/grid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:padding="12dp"
+            android:focusable="true"
+            android:descendantFocusability="afterDescendants" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+            <Button
+                android:id="@+id/btnKids"
+                style="@style/TvButton"
+                android:text="👶 Chế độ trẻ em" />
+            <Button
+                android:id="@+id/btnSettings"
+                style="@style/TvButton"
+                android:layout_marginStart="12dp"
+                android:text="⚙️ Cài đặt" />
+            <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+            <TextView
+                android:id="@+id/hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_dim"
+                android:textSize="15sp"
+                android:text="Chép ảnh vào Pictures/TVHome để làm nền"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
