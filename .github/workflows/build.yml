@@ -2,7 +2,10 @@ name: Build APK
 on:
   push:
     branches: [ main ]
+    paths-ignore: [ 'release/**' ]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,3 +21,9 @@ jobs:
         with:
           name: TVHome-apk
           path: app/build/outputs/apk/release/app-release.apk
+      - name: Publish APK to release/ folder
+        run: |
+          mkdir -p release && cp app/build/outputs/apk/release/app-release.apk release/TVHome.apk
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          git add release/TVHome.apk
+          git diff --cached --quiet || (git commit -m "Update TVHome.apk [skip ci]" && git push)

@@ -180,7 +180,7 @@ class MainActivity : AppCompatActivity() {
                 photoIndex %= files.size
                 val f = files[photoIndex++]
                 val bmp = withContext(Dispatchers.IO) {
-                    Photos.decode(f, b.root.width.coerceAtLeast(1280), b.root.height.coerceAtLeast(720))
+                    Photos.decode(f, b.rootView.width.coerceAtLeast(1280), b.rootView.height.coerceAtLeast(720))
                 }
                 if (bmp != null) {
                     b.bg.animate().alpha(0f).setDuration(600).withEndAction {

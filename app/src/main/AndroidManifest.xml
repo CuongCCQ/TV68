@@ -11,6 +11,7 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
     <application
+        android:name=".App"
         android:allowBackup="true"
         android:banner="@drawable/banner"
         android:icon="@drawable/banner"
@@ -35,6 +36,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".CrashActivity" android:exported="false" android:theme="@android:style/Theme.Material.NoActionBar" />
 
         <activity
             android:name=".SettingsActivity"
