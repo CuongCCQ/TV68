@@ -97,6 +97,7 @@
         <TextView android:id="@+id/kidsModeChoice" style="@style/SettingsRow" android:layout_marginTop="28dp" />
         <TextView android:id="@+id/kidsAppsChoice" style="@style/SettingsRow" android:layout_marginTop="8dp" />
         <TextView android:id="@+id/pinChoice" style="@style/SettingsRow" android:layout_marginTop="8dp" />
+        <TextView android:id="@+id/photoMinutesChoice" style="@style/SettingsRow" android:layout_marginTop="8dp" />
         <TextView android:id="@+id/photosHelp" style="@style/SettingsRow" android:layout_marginTop="8dp" />
 
         <TextView

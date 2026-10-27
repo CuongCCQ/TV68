@@ -656,7 +656,7 @@ final class Config {
             wallpapers.addAll(familyPhotos);
             wallpaper = familyPhotos.get(0);
             wallpaperEnabled = true;
-            if (rotationMinutes <= 0) rotationMinutes = 1;
+            rotationMinutes = Family.prefs(ctx).getInt(Family.PHOTO_MINUTES, 1);
             if (wallpaperDim <= 0) wallpaperDim = 25;
         }
         // TV68: kids mode shows only the chosen apps and takes the editing controls off Home.

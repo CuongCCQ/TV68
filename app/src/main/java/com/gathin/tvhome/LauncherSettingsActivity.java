@@ -33,7 +33,7 @@ public final class LauncherSettingsActivity extends Activity {
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private TextView wallpaperChoice;
-    private TextView weatherChoice, kidsModeChoice, kidsAppsChoice, pinChoice;
+    private TextView weatherChoice, kidsModeChoice, kidsAppsChoice, pinChoice, photoMinutesChoice;
     private TextView animationsChoice;
     private TextView advancedChoice;
     private TextView followThemeChoice;
@@ -128,6 +128,16 @@ public final class LauncherSettingsActivity extends Activity {
                         if (i == 0) Family.createPin(this, this::refreshFamily);
                         else { Family.clearPin(this); Family.setKidsMode(this, false); changed(); refreshFamily(); }
                     }).show());
+        });
+        photoMinutesChoice = findViewById(R.id.photoMinutesChoice);
+        photoMinutesChoice.setOnClickListener(v -> {
+            final int[] values = {1, 2, 5, 10, 30, 60};
+            CharSequence[] names = new CharSequence[values.length];
+            for (int i = 0; i < values.length; i++) names[i] = getString(R.string.minutes_fmt, values[i]);
+            new AlertDialog.Builder(this).setTitle(R.string.photo_minutes_title).setItems(names, (d, i) -> {
+                Family.prefs(this).edit().putInt(Family.PHOTO_MINUTES, values[i]).apply();
+                changed(); refreshFamily();
+            }).show();
         });
         TextView photosHelp = findViewById(R.id.photosHelp);
         photosHelp.setText(R.string.photos_help);
@@ -315,6 +325,7 @@ public final class LauncherSettingsActivity extends Activity {
         kidsModeChoice.setText(getString(R.string.kids_mode_state, getString(Family.kidsMode(this) ? R.string.tv68_on : R.string.tv68_off)));
         kidsAppsChoice.setText(getString(R.string.kids_apps_state, Family.kidsApps(this).size()));
         pinChoice.setText(Family.hasPin(this) ? R.string.pin_state_set : R.string.pin_state_unset);
+        photoMinutesChoice.setText(getString(R.string.photo_minutes_state, getString(R.string.minutes_fmt, Family.prefs(this).getInt(Family.PHOTO_MINUTES, 1))));
     }
 
     private void pickKidsApps() {

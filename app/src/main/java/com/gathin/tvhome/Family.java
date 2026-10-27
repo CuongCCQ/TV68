@@ -28,6 +28,7 @@ final class Family {
 
     static final String KIDS_MODE = "kids_mode";
     static final String KIDS_APPS = "kids_apps";
+    static final String PHOTO_MINUTES = "photo_minutes";
     private static final String PIN_HASH = "pin_hash";
     private static final String PIN_SALT = "pin_salt";
 

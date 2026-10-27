@@ -163,6 +163,10 @@
     <string name="pin_to_settings">Nhập PIN để vào cài đặt</string>
     <string name="next">Tiếp</string>
     <string name="tv68_on">Bật</string>
+    <string name="photo_minutes_state">🖼️ Đổi ảnh nền mỗi: %1$s</string>
+    <string name="photo_minutes_title">Đổi ảnh nền mỗi</string>
+    <string name="minutes_fmt">%1$d phút</string>
+    <string name="seconds_30">30 giây</string>
     <string name="tv68_off">Tắt</string>
     <string name="kids_mode_on">👶 Chế độ trẻ em</string>
     <string name="kids_mode_state">👶 Chế độ trẻ em: %1$s</string>
