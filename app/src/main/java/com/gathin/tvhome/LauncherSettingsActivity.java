@@ -33,6 +33,7 @@ public final class LauncherSettingsActivity extends Activity {
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private TextView wallpaperChoice;
+    private TextView weatherChoice, kidsModeChoice, kidsAppsChoice, pinChoice;
     private TextView animationsChoice;
     private TextView advancedChoice;
     private TextView followThemeChoice;
@@ -108,6 +109,36 @@ public final class LauncherSettingsActivity extends Activity {
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
+        // TV68 rows: weather place, kids mode, kids apps, PIN, photo help.
+        weatherChoice = findViewById(R.id.weatherChoice);
+        weatherChoice.setOnClickListener(v -> askWeatherCity());
+        kidsModeChoice = findViewById(R.id.kidsModeChoice);
+        kidsModeChoice.setOnClickListener(v -> {
+            if (Family.kidsMode(this)) { Family.setKidsMode(this, false); changed(); refreshFamily(); }
+            else if (!Family.hasPin(this)) Family.createPin(this, () -> { Family.setKidsMode(this, true); changed(); refreshFamily(); });
+            else { Family.setKidsMode(this, true); changed(); refreshFamily(); }
+        });
+        kidsAppsChoice = findViewById(R.id.kidsAppsChoice);
+        kidsAppsChoice.setOnClickListener(v -> pickKidsApps());
+        pinChoice = findViewById(R.id.pinChoice);
+        pinChoice.setOnClickListener(v -> {
+            if (!Family.hasPin(this)) { Family.createPin(this, this::refreshFamily); return; }
+            Family.verifyPin(this, getString(R.string.pin_hint), () -> new AlertDialog.Builder(this)
+                    .setItems(new CharSequence[]{getString(R.string.pin_change), getString(R.string.pin_remove)}, (d, i) -> {
+                        if (i == 0) Family.createPin(this, this::refreshFamily);
+                        else { Family.clearPin(this); Family.setKidsMode(this, false); changed(); refreshFamily(); }
+                    }).show());
+        });
+        TextView photosHelp = findViewById(R.id.photosHelp);
+        photosHelp.setText(R.string.photos_help);
+        photosHelp.setOnClickListener(v -> {
+            StringBuilder dirs = new StringBuilder();
+            for (File d : Family.photoFolders()) dirs.append(d.getPath()).append('\n');
+            new AlertDialog.Builder(this).setTitle(R.string.photos_help)
+                    .setMessage(getString(R.string.photos_help_text, dirs.toString().trim()))
+                    .setPositiveButton(android.R.string.ok, null).show();
+        });
+        refreshFamily();
         animationsChoice = findViewById(R.id.animationsChoice);
         animationsChoice.setOnClickListener(v -> {
             animations = !animations;
@@ -274,6 +305,70 @@ public final class LauncherSettingsActivity extends Activity {
         choices.edit().putBoolean("advanced_effects", enabled).apply();
         changed();
         refresh();
+    }
+
+
+    // ---------- TV68 ----------
+
+    private void refreshFamily() {
+        weatherChoice.setText(getString(R.string.weather_state, Weather.place(this).name));
+        kidsModeChoice.setText(getString(R.string.kids_mode_state, getString(Family.kidsMode(this) ? R.string.on : R.string.off)));
+        kidsAppsChoice.setText(getString(R.string.kids_apps_state, Family.kidsApps(this).size()));
+        pinChoice.setText(Family.hasPin(this) ? R.string.pin_state_set : R.string.pin_state_unset);
+    }
+
+    private void pickKidsApps() {
+        PackageManager pm = getPackageManager();
+        java.util.Map<String, String> labels = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        java.util.Map<String, String> pkgByLabel = new java.util.HashMap<>();
+        for (String cat : new String[]{Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER}) {
+            for (ResolveInfo ri : pm.queryIntentActivities(new Intent(Intent.ACTION_MAIN).addCategory(cat), 0)) {
+                if (ri.activityInfo == null || ri.activityInfo.packageName.equals(getPackageName())) continue;
+                String label = String.valueOf(ri.loadLabel(pm));
+                if (!pkgByLabel.containsKey(ri.activityInfo.packageName)) {
+                    pkgByLabel.put(ri.activityInfo.packageName, label);
+                    labels.put(label + "\u200b" + ri.activityInfo.packageName, ri.activityInfo.packageName);
+                }
+            }
+        }
+        final List<String> pkgs = new ArrayList<>(labels.values());
+        CharSequence[] names = new CharSequence[pkgs.size()];
+        boolean[] checked = new boolean[pkgs.size()];
+        java.util.Set<String> current = Family.kidsApps(this);
+        for (int i = 0; i < pkgs.size(); i++) { names[i] = pkgByLabel.get(pkgs.get(i)); checked[i] = current.contains(pkgs.get(i)); }
+        new AlertDialog.Builder(this).setTitle(R.string.kids_apps_state)
+                .setMultiChoiceItems(names, checked, (d, i, v) -> checked[i] = v)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    java.util.Set<String> chosen = new java.util.HashSet<>();
+                    for (int i = 0; i < pkgs.size(); i++) if (checked[i]) chosen.add(pkgs.get(i));
+                    Family.setKidsApps(this, chosen);
+                    changed(); refreshFamily();
+                }).setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    private void askWeatherCity() {
+        android.widget.EditText in = new android.widget.EditText(this);
+        in.setHint(R.string.weather_city_hint);
+        in.setText(Weather.place(this).name);
+        new AlertDialog.Builder(this).setTitle(R.string.weather_state).setView(in)
+                .setPositiveButton(android.R.string.search_go, (d, w) -> {
+                    final String q = in.getText().toString().trim();
+                    if (q.isEmpty()) return;
+                    new Thread(() -> {
+                        final List<Weather.Place> found = Weather.search(q);
+                        runOnUiThread(() -> {
+                            if (isFinishing()) return;
+                            if (found.isEmpty()) { Toast.makeText(this, R.string.weather_none, Toast.LENGTH_SHORT).show(); return; }
+                            CharSequence[] names = new CharSequence[found.size()];
+                            for (int i = 0; i < found.size(); i++) names[i] = found.get(i).name;
+                            new AlertDialog.Builder(this).setTitle(R.string.weather_pick).setItems(names, (d2, i) -> {
+                                Weather.Place p = found.get(i);
+                                Weather.setPlace(this, new Weather.Place(p.name.split(",")[0], p.lat, p.lon));
+                                changed(); refreshFamily();
+                            }).show();
+                        });
+                    }, "geocode").start();
+                }).setNegativeButton(android.R.string.cancel, null).show();
     }
 
     private void refresh() {

@@ -311,6 +311,21 @@
                 android:focusable="false"
                 android:visibility="gone" />
 
+            <!-- TV68: current weather, under the stats line (which is usually gone). -->
+            <TextView
+                android:id="@+id/weather"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/stats"
+                android:layout_alignStart="@id/leftBlock"
+                android:layout_marginTop="6dp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="#E6FFFFFF"
+                android:textSize="16sp"
+                android:fontFamily="@string/font_medium"
+                android:focusable="false" />
+
             <LinearLayout
                 android:id="@+id/topButtons"
                 android:layout_width="wrap_content"

@@ -778,6 +778,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return true;
         });
 
+        // TV68: in kids mode every way into settings asks for the PIN first; the library and reorder buttons stay off.
+        if (Family.kidsMode(this)) {
+            View.OnClickListener gate = v -> Family.verifyPin(this, getString(R.string.pin_to_settings),
+                    () -> startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
+            btnSettings.setOnClickListener(gate);
+            btnSettings.setOnLongClickListener(v -> { gate.onClick(v); return true; });
+            btnReorder.setVisibility(View.GONE);
+            btnLibraryTop.setVisibility(View.GONE);
+            ((TextView) btnSettings).setText(R.string.kids_mode_on);
+        }
+        weatherTicker = new Weather.Ticker(findViewById(R.id.weather));
+        requestPhotoPermission();
+
         // Keep focus on the top bar at its ends and at the top: Android's focus finder would otherwise
         // jump to a tile far below when there is nothing in that direction.
         boolean rtlMenuBar = getResources().getBoolean(R.bool.rtl_menu_bar);
@@ -943,6 +956,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        if (weatherTicker != null) weatherTicker.start();
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -1029,6 +1043,24 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /** Rebuilds the tiles (and the module cards), then puts focus back where it was. */
+    private Weather.Ticker weatherTicker;
+    private static final int PHOTO_PERMISSION_REQUEST = 4068;
+
+    /** TV68: read access to the family photos; granted once, Home rebuilds so they show at once. */
+    private void requestPhotoPermission() {
+        String perm = android.os.Build.VERSION.SDK_INT >= 33 ? "android.permission.READ_MEDIA_IMAGES"
+                : android.Manifest.permission.READ_EXTERNAL_STORAGE;
+        if (checkSelfPermission(perm) != android.content.pm.PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{perm}, PHOTO_PERMISSION_REQUEST);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PHOTO_PERMISSION_REQUEST && grantResults.length > 0
+                && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED && !Family.photos().isEmpty()) recreate();
+    }
+
     private void reloadApps(boolean animate) {
         reloadApps(animate, true);
     }
@@ -1157,6 +1189,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         root.removeCallbacks(showIdleClock);
         endReorder();   // Home or another app while reordering keeps the order so far
         wallpaperPlayer.stop();
+        if (weatherTicker != null) weatherTicker.stop();
         stopAmbientAnimation();
         hero.animate().cancel();
         ambient.animate().cancel();
