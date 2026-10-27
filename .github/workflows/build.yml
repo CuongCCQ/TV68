@@ -21,7 +21,9 @@ jobs:
       - name: Report errors
         if: failure()
         run: |
-          grep -nE "error:|e: |What went wrong|Execution failed|AAPT|resource .* not found" -A4 build.log | head -c 3500 | sed 's/%/%25/g; s/\r/%0D/g' | tr '\n' '\r' | sed 's/\r/%0A/g' | xargs -0 printf "::error::%s\n"
+          { grep -niE "error|exception|what went wrong|failed" -A6 build.log | head -c 3200; echo; tail -c 1500 build.log; } > err.txt || true
+          python3 -c "import sys;t=open('err.txt').read().replace('%','%25').replace('','').replace('
+','%0A');print('::error::'+t)"
       - uses: actions/upload-artifact@v4
         with:
           name: TVHome-apk
