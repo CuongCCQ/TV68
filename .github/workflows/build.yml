@@ -13,6 +13,11 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '17' }
+      # Keep one debug signing key across builds, so each new APK installs over the previous one.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: debug-keystore-v1
       - name: Build
         run: |
           chmod +x gradlew
