@@ -162,6 +162,8 @@
     <string name="pin_mismatch">Hai lần nhập không khớp</string>
     <string name="pin_to_settings">Nhập PIN để vào cài đặt</string>
     <string name="next">Tiếp</string>
+    <string name="tv68_on">Bật</string>
+    <string name="tv68_off">Tắt</string>
     <string name="kids_mode_on">👶 Chế độ trẻ em</string>
     <string name="kids_mode_state">👶 Chế độ trẻ em: %1$s</string>
     <string name="kids_apps_state">Ứng dụng cho bé: %1$d app</string>
@@ -175,6 +177,4 @@
     <string name="weather_none">Không tìm thấy</string>
     <string name="photos_help">🖼️ Ảnh gia đình: cách thêm</string>
     <string name="photos_help_text">Chép ảnh (jpg/png) vào thư mục tên TVHome:\n\n• Trong bộ nhớ TV: Pictures/TVHome\n• Hoặc thư mục TVHome ở gốc USB rồi cắm vào TV\n\nẢnh tự chuyển mỗi phút. Thư mục đang quét:\n%1$s</string>
-    <string name="on">Bật</string>
-    <string name="off">Tắt</string>
 </resources>

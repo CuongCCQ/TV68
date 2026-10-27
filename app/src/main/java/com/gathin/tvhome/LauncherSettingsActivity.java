@@ -312,7 +312,7 @@ public final class LauncherSettingsActivity extends Activity {
 
     private void refreshFamily() {
         weatherChoice.setText(getString(R.string.weather_state, Weather.place(this).name));
-        kidsModeChoice.setText(getString(R.string.kids_mode_state, getString(Family.kidsMode(this) ? R.string.on : R.string.off)));
+        kidsModeChoice.setText(getString(R.string.kids_mode_state, getString(Family.kidsMode(this) ? R.string.tv68_on : R.string.tv68_off)));
         kidsAppsChoice.setText(getString(R.string.kids_apps_state, Family.kidsApps(this).size()));
         pinChoice.setText(Family.hasPin(this) ? R.string.pin_state_set : R.string.pin_state_unset);
     }
@@ -382,9 +382,9 @@ public final class LauncherSettingsActivity extends Activity {
             dockChoices[i].setSelected(dockOpacity == DOCK_OPACITIES[i]);
         }
         animationsChoice.setText(getString(R.string.animations_state,
-                getString(animations ? R.string.on : R.string.off)));
+                getString(animations ? R.string.tv68_on : R.string.tv68_off)));
         advancedChoice.setText(getString(R.string.advanced_effects_state,
-                getString(advancedEffects ? R.string.on : R.string.off)));
+                getString(advancedEffects ? R.string.tv68_on : R.string.tv68_off)));
         advancedChoice.setEnabled(animations);
         advancedChoice.setAlpha(animations ? 1f : 0.5f);
         String wallpaperCurrent = choices.getString(Config.WALLPAPER_CHOICE_KEY, null);
