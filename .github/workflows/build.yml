@@ -14,7 +14,14 @@ jobs:
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '17' }
       - name: Build
-        run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew assembleRelease --no-daemon 2>&1 | tee build.log
+      - name: Report errors
+        if: failure()
+        run: |
+          grep -nE "error:|e: |What went wrong|Execution failed|AAPT|resource .* not found" -A4 build.log | head -c 3500 | sed 's/%/%25/g; s/\r/%0D/g' | tr '\n' '\r' | sed 's/\r/%0A/g' | xargs -0 printf "::error::%s\n"
       - uses: actions/upload-artifact@v4
         with:
           name: TVHome-apk
