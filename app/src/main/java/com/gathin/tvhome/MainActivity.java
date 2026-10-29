@@ -789,6 +789,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             ((TextView) btnSettings).setText(R.string.kids_mode_on);
         }
         weatherTicker = new Weather.Ticker(findViewById(R.id.weather));
+        if (getResources().getBoolean(R.bool.mac_dock)) {
+            // TV68: Dock at the bottom. The grid keeps its width; only its height collapses to its rows.
+            android.widget.FrameLayout.LayoutParams glp = (android.widget.FrameLayout.LayoutParams) grid.getLayoutParams();
+            glp.height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+            glp.gravity = Gravity.BOTTOM;
+            grid.setLayoutParams(glp);
+        }
         requestPhotoPermission();
 
         // Keep focus on the top bar at its ends and at the top: Android's focus finder would otherwise
