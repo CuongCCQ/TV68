@@ -163,6 +163,16 @@
     <string name="pin_to_settings">Nhập PIN để vào cài đặt</string>
     <string name="next">Tiếp</string>
     <string name="tv68_on">Bật</string>
+    <string name="ask_parent">📲 Xin bố mẹ (Telegram)</string>
+    <string name="asked_parent">Đã gửi tin cho bố mẹ. Đợi bố mẹ đồng ý nhé!</string>
+    <string name="telegram_title">📲 Telegram – duyệt từ xa</string>
+    <string name="telegram_state">📲 Telegram: %1$s</string>
+    <string name="telegram_not_set">chưa cài bot</string>
+    <string name="telegram_not_linked">chưa liên kết</string>
+    <string name="telegram_linked">%1$d người đã liên kết</string>
+    <string name="telegram_unlink">Huỷ liên kết tất cả</string>
+    <string name="telegram_setup_help">Chưa có bot Telegram. Tạo bot bằng @BotFather rồi gửi mã bot vào TV qua adb (xem README của TV68).</string>
+    <string name="telegram_link_help">Trên điện thoại, mở bot Telegram của bạn và gửi:\n\n/link %1$s\n\nBố và mẹ đều có thể liên kết. Đang liên kết: %2$d người.\nGửi /lock để khoá lại tất cả ngay.</string>
     <string name="kids_guard_name">TV68 – Khoá trẻ em</string>
     <string name="kids_guard_description">Khi bật chế độ trẻ em, chặn các app bị khoá được mở bằng nút tắt trên remote hoặc tìm kiếm giọng nói. Chỉ đọc tên app vừa mở, không đọc nội dung màn hình.</string>
     <string name="unlock_title">Mở khoá toàn màn hình</string>

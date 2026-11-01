@@ -111,6 +111,28 @@ final class Family {
      * The callback gets the minutes, or CHOSE_SETTINGS, only when the PIN is right.
      */
     static void pinAndDuration(Activity a, String title, boolean withSettings, java.util.function.IntConsumer onChoice) {
+        pinAndDuration(a, title, withSettings, null, onChoice);
+    }
+
+    private static java.lang.ref.WeakReference<AlertDialog> openPinDialog;
+
+    /** Closes the PIN dialog on screen, if any (a parent answered on Telegram). */
+    static void dismissPinDialog() {
+        AlertDialog d = openPinDialog == null ? null : openPinDialog.get();
+        if (d != null && d.isShowing()) { try { d.dismiss(); } catch (Exception ignored) { } }
+    }
+
+    /** Locks every app again and ends a whole-screen unlock. */
+    static void relockAll(Context ctx) {
+        SharedPreferences.Editor e = prefs(ctx).edit().remove(UNLOCK_UNTIL);
+        for (String k : prefs(ctx).getAll().keySet()) if (k.startsWith(APP_UNLOCK)) e.remove(k);
+        e.apply();
+        try {
+            ctx.startActivity(new android.content.Intent(ctx, MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (Exception ignored) { }
+    }
+
+    static void pinAndDuration(Activity a, String title, boolean withSettings, Runnable askParent, java.util.function.IntConsumer onChoice) {
         float dp = a.getResources().getDisplayMetrics().density;
         android.widget.LinearLayout box = new android.widget.LinearLayout(a);
         box.setOrientation(android.widget.LinearLayout.VERTICAL);
@@ -146,7 +168,15 @@ final class Family {
             });
             row.addView(b, new android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         }
+        if (askParent != null) {
+            android.widget.Button ask = new android.widget.Button(a);
+            ask.setAllCaps(false);
+            ask.setText(R.string.ask_parent);
+            ask.setOnClickListener(v -> askParent.run());
+            box.addView(ask, new android.widget.LinearLayout.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
         pin.listenTo(dialog);
+        openPinDialog = new java.lang.ref.WeakReference<>(dialog);
         dialog.show();
         pin.focus();
     }
@@ -154,7 +184,11 @@ final class Family {
     /** PIN and how long in one dialog; runs onOpen once the app is unlocked. */
     static void askToOpenApp(Activity a, String pkg, String label, Runnable onOpen) {
         if (!hasPin(a)) { onOpen.run(); return; }
-        pinAndDuration(a, a.getString(R.string.app_locked_title, label), false, minutes -> {
+        Runnable ask = !Telegram.linked(a) ? null : () -> {
+            Telegram.askParents(a, pkg, label);
+            Toast.makeText(a, R.string.asked_parent, Toast.LENGTH_LONG).show();
+        };
+        pinAndDuration(a, a.getString(R.string.app_locked_title, label), false, ask, minutes -> {
             unlockAppFor(a, pkg, minutes);
             onOpen.run();
         });

@@ -33,7 +33,7 @@ public final class LauncherSettingsActivity extends Activity {
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private TextView wallpaperChoice;
-    private TextView weatherChoice, kidsModeChoice, kidsAppsChoice, pinChoice, photoMinutesChoice;
+    private TextView weatherChoice, kidsModeChoice, kidsAppsChoice, pinChoice, photoMinutesChoice, telegramChoice;
     private TextView animationsChoice;
     private TextView advancedChoice;
     private TextView followThemeChoice;
@@ -145,6 +145,19 @@ public final class LauncherSettingsActivity extends Activity {
                 Family.prefs(this).edit().putInt(Family.PHOTO_MINUTES, values[i]).apply();
                 changed(); refreshFamily();
             }).show();
+        });
+        telegramChoice = findViewById(R.id.telegramChoice);
+        telegramChoice.setOnClickListener(v -> {
+            if (Telegram.token(this) == null) {
+                new AlertDialog.Builder(this).setTitle(R.string.telegram_title).setMessage(R.string.telegram_setup_help)
+                        .setPositiveButton(android.R.string.ok, null).show();
+                return;
+            }
+            String msg = getString(R.string.telegram_link_help, Telegram.linkCode(this), Telegram.chats(this).size());
+            new AlertDialog.Builder(this).setTitle(R.string.telegram_title).setMessage(msg)
+                    .setPositiveButton(android.R.string.ok, (d, w) -> refreshFamily())
+                    .setNeutralButton(R.string.telegram_unlink, (d, w) -> { Telegram.unlinkAll(this); refreshFamily(); })
+                    .show();
         });
         TextView photosHelp = findViewById(R.id.photosHelp);
         photosHelp.setText(R.string.photos_help);
@@ -335,6 +348,8 @@ public final class LauncherSettingsActivity extends Activity {
         kidsModeChoice.setText(getString(R.string.kids_mode_state, kidsState));
         kidsAppsChoice.setText(getString(R.string.kids_apps_state, Family.kidsApps(this).size()));
         pinChoice.setText(Family.hasPin(this) ? R.string.pin_state_set : R.string.pin_state_unset);
+        telegramChoice.setText(getString(R.string.telegram_state, Telegram.token(this) == null ? getString(R.string.telegram_not_set)
+                : Telegram.chats(this).isEmpty() ? getString(R.string.telegram_not_linked) : getString(R.string.telegram_linked, Telegram.chats(this).size())));
         photoMinutesChoice.setText(getString(R.string.photo_minutes_state, getString(R.string.minutes_fmt, Family.prefs(this).getInt(Family.PHOTO_MINUTES, 1))));
     }
 

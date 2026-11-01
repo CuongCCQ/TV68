@@ -238,6 +238,16 @@
             </intent-filter>
         </receiver>
 
+        <!-- TV68: Telegram bot token over adb; see TelegramConfig. -->
+        <receiver
+            android:name=".TelegramConfig"
+            android:exported="true"
+            android:permission="android.permission.WRITE_SECURE_SETTINGS">
+            <intent-filter>
+                <action android:name="com.gathin.tvhome.TELEGRAM" />
+            </intent-filter>
+        </receiver>
+
         <!-- TV68: kids mode guard for apps opened by the remote's app buttons or voice search; see KidsGuardService. -->
         <service
             android:name=".KidsGuardService"

@@ -67,6 +67,22 @@ public class KidsGuardService extends AccessibilityService {
         return launchable.contains(pkg);
     }
 
+    private Telegram.Poller poller;
+
+    @Override
+    protected void onServiceConnected() {
+        super.onServiceConnected();
+        // The service stays bound by the system, which keeps the Telegram poller alive while Home is in the background.
+        poller = new Telegram.Poller(this);
+        poller.start();
+    }
+
+    @Override
+    public void onDestroy() {
+        if (poller != null) poller.quit();
+        super.onDestroy();
+    }
+
     @Override
     public void onInterrupt() { }
 }
