@@ -660,7 +660,7 @@ final class Config {
             if (wallpaperDim <= 0) wallpaperDim = 25;
         }
         // TV68: kids mode shows only the chosen apps and takes the editing controls off Home.
-        if (Family.kidsMode(ctx)) {
+        if (Family.kidsLocked(ctx)) {
             java.util.Set<String> kids = Family.kidsApps(ctx);
             android.content.pm.PackageManager pm = ctx.getPackageManager();
             for (String cat : new String[]{Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER}) {

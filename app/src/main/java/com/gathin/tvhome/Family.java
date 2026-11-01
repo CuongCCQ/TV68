@@ -68,7 +68,52 @@ final class Family {
 
     static boolean kidsMode(Context ctx) { return prefs(ctx).getBoolean(KIDS_MODE, false); }
 
-    static void setKidsMode(Context ctx, boolean on) { prefs(ctx).edit().putBoolean(KIDS_MODE, on).apply(); }
+    static void setKidsMode(Context ctx, boolean on) {
+        prefs(ctx).edit().putBoolean(KIDS_MODE, on).remove(UNLOCK_UNTIL).apply();
+    }
+
+    // ---------- Timed unlock ----------
+
+    static final String UNLOCK_UNTIL = "kids_unlock_until";
+    private static final android.os.Handler MAIN = new android.os.Handler(android.os.Looper.getMainLooper());
+    private static Runnable pendingRelock;
+
+    /** Kids mode is on and not unlocked for a while: Home shows only the kids' apps. */
+    static boolean kidsLocked(Context ctx) {
+        return kidsMode(ctx) && System.currentTimeMillis() >= unlockUntil(ctx);
+    }
+
+    /** End of the current timed unlock, or 0. */
+    static long unlockUntil(Context ctx) { return prefs(ctx).getLong(UNLOCK_UNTIL, 0); }
+
+    static void unlockFor(Context ctx, int minutes) {
+        prefs(ctx).edit().putLong(UNLOCK_UNTIL, System.currentTimeMillis() + minutes * 60_000L).apply();
+        scheduleRelock(ctx);
+    }
+
+    static void relockNow(Context ctx) {
+        prefs(ctx).edit().remove(UNLOCK_UNTIL).apply();
+        if (pendingRelock != null) MAIN.removeCallbacks(pendingRelock);
+    }
+
+    /**
+     * When the unlock runs out, bring Home back to the front so the kids' screen returns even if an app
+     * is open. Best effort: if Android has stopped the launcher by then, the lock applies on the next Home press.
+     */
+    static void scheduleRelock(Context ctx) {
+        final Context app = ctx.getApplicationContext();
+        if (pendingRelock != null) MAIN.removeCallbacks(pendingRelock);
+        long wait = unlockUntil(app) - System.currentTimeMillis();
+        if (!kidsMode(app) || wait <= 0) return;
+        pendingRelock = () -> {
+            if (!kidsLocked(app)) return;
+            try {
+                app.startActivity(new android.content.Intent(app, MainActivity.class)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (Exception ignored) { }
+        };
+        MAIN.postDelayed(pendingRelock, wait + 500);
+    }
 
     static Set<String> kidsApps(Context ctx) {
         return new HashSet<>(prefs(ctx).getStringSet(KIDS_APPS, Collections.emptySet()));

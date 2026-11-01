@@ -114,7 +114,14 @@ public final class LauncherSettingsActivity extends Activity {
         weatherChoice.setOnClickListener(v -> askWeatherCity());
         kidsModeChoice = findViewById(R.id.kidsModeChoice);
         kidsModeChoice.setOnClickListener(v -> {
-            if (Family.kidsMode(this)) { Family.setKidsMode(this, false); changed(); refreshFamily(); }
+            if (Family.kidsMode(this) && !Family.kidsLocked(this)) {
+                // Temporarily unlocked: lock again now, or turn kids mode off for good.
+                new AlertDialog.Builder(this).setItems(new CharSequence[]{getString(R.string.relock_now), getString(R.string.kids_off_forever)}, (d, i) -> {
+                    if (i == 0) Family.relockNow(this); else Family.setKidsMode(this, false);
+                    changed(); refreshFamily();
+                }).show();
+            }
+            else if (Family.kidsMode(this)) { Family.setKidsMode(this, false); changed(); refreshFamily(); }
             else if (!Family.hasPin(this)) Family.createPin(this, () -> { Family.setKidsMode(this, true); changed(); refreshFamily(); });
             else { Family.setKidsMode(this, true); changed(); refreshFamily(); }
         });
@@ -322,7 +329,10 @@ public final class LauncherSettingsActivity extends Activity {
 
     private void refreshFamily() {
         weatherChoice.setText(getString(R.string.weather_state, Weather.place(this).name));
-        kidsModeChoice.setText(getString(R.string.kids_mode_state, getString(Family.kidsMode(this) ? R.string.tv68_on : R.string.tv68_off)));
+        String kidsState = getString(Family.kidsMode(this) ? R.string.tv68_on : R.string.tv68_off);
+        if (Family.kidsMode(this) && !Family.kidsLocked(this))
+            kidsState = getString(R.string.unlocked_until, android.text.format.DateFormat.getTimeFormat(this).format(new java.util.Date(Family.unlockUntil(this))));
+        kidsModeChoice.setText(getString(R.string.kids_mode_state, kidsState));
         kidsAppsChoice.setText(getString(R.string.kids_apps_state, Family.kidsApps(this).size()));
         pinChoice.setText(Family.hasPin(this) ? R.string.pin_state_set : R.string.pin_state_unset);
         photoMinutesChoice.setText(getString(R.string.photo_minutes_state, getString(R.string.minutes_fmt, Family.prefs(this).getInt(Family.PHOTO_MINUTES, 1))));
