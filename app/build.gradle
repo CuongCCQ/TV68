@@ -15,6 +15,20 @@ android {
         versionName '3.0'
     }
 
+    // TV68: a fixed signing key from the repo's Actions secrets (TV68_KEYSTORE, TV68_KEY_PASS), so every new
+    // APK installs over the last one. Without the secrets (a local build) the debug key is used.
+    def tv68Store = file(System.getenv('TV68_STORE_FILE') ?: 'none')
+    signingConfigs {
+        tv68 {
+            if (tv68Store.exists()) {
+                storeFile tv68Store
+                storePassword System.getenv('TV68_KEY_PASS')
+                keyAlias 'tv68'
+                keyPassword System.getenv('TV68_KEY_PASS')
+            }
+        }
+    }
+
     buildTypes {
         release {
             // R8 strips and optimises the code (AndroidX included): smaller APK, faster start on a slow TV CPU.
@@ -22,7 +36,7 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // Sideloaded over ADB, never published: sign with the debug key so it installs over a debug build.
-            signingConfig signingConfigs.debug
+            signingConfig tv68Store.exists() ? signingConfigs.tv68 : signingConfigs.debug
         }
     }
 
