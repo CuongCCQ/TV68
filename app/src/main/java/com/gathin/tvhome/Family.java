@@ -72,6 +72,52 @@ final class Family {
         prefs(ctx).edit().putBoolean(KIDS_MODE, on).remove(UNLOCK_UNTIL).apply();
     }
 
+    // ---------- Per-app timed unlock (kids mode) ----------
+
+    private static final String APP_UNLOCK = "app_unlock_";
+    private static final java.util.Map<String, Runnable> APP_RELOCKS = new java.util.HashMap<>();
+
+    /** In kids mode: may this app open without the PIN right now? */
+    static boolean appAllowed(Context ctx, String pkg) {
+        return !kidsLocked(ctx) || kidsApps(ctx).contains(pkg)
+                || System.currentTimeMillis() < prefs(ctx).getLong(APP_UNLOCK + pkg, 0);
+    }
+
+    static long appUnlockUntil(Context ctx, String pkg) { return prefs(ctx).getLong(APP_UNLOCK + pkg, 0); }
+
+    /** Opens one app for some minutes; when they run out Home comes back to the front. */
+    static void unlockAppFor(Context ctx, String pkg, int minutes) {
+        final Context app = ctx.getApplicationContext();
+        final long until = System.currentTimeMillis() + minutes * 60_000L;
+        prefs(app).edit().putLong(APP_UNLOCK + pkg, until).apply();
+        Runnable old = APP_RELOCKS.remove(pkg);
+        if (old != null) MAIN.removeCallbacks(old);
+        Runnable relock = () -> {
+            APP_RELOCKS.remove(pkg);
+            if (appAllowed(app, pkg)) return;
+            try {
+                app.startActivity(new android.content.Intent(app, MainActivity.class)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (Exception ignored) { }
+        };
+        APP_RELOCKS.put(pkg, relock);
+        MAIN.postDelayed(relock, minutes * 60_000L + 500);
+    }
+
+    /** PIN, then how long; runs onOpen once the app is unlocked. */
+    static void askToOpenApp(Activity a, String pkg, String label, Runnable onOpen) {
+        verifyPin(a, a.getString(R.string.app_locked_title, label), () -> {
+            final int[] minutes = {15, 30, 60, 120};
+            CharSequence[] items = new CharSequence[minutes.length];
+            for (int i = 0; i < minutes.length; i++)
+                items[i] = minutes[i] < 60 ? a.getString(R.string.unlock_minutes, minutes[i]) : a.getString(R.string.unlock_hours, minutes[i] / 60);
+            new AlertDialog.Builder(a).setTitle(a.getString(R.string.app_unlock_for, label)).setItems(items, (d, i) -> {
+                unlockAppFor(a, pkg, minutes[i]);
+                onOpen.run();
+            }).show();
+        });
+    }
+
     // ---------- Timed unlock ----------
 
     static final String UNLOCK_UNTIL = "kids_unlock_until";

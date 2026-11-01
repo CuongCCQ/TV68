@@ -659,17 +659,9 @@ final class Config {
             rotationMinutes = Family.prefs(ctx).getInt(Family.PHOTO_MINUTES, 1);
             if (wallpaperDim <= 0) wallpaperDim = 25;
         }
-        // TV68: kids mode shows only the chosen apps and takes the editing controls off Home.
+        // TV68: kids mode keeps every app on Home, but the ones not allowed are locked (AppAdapter asks for the PIN
+        // and a time limit); the editing controls come off Home.
         if (Family.kidsLocked(ctx)) {
-            java.util.Set<String> kids = Family.kidsApps(ctx);
-            android.content.pm.PackageManager pm = ctx.getPackageManager();
-            for (String cat : new String[]{Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER}) {
-                for (android.content.pm.ResolveInfo ri : pm.queryIntentActivities(new Intent(Intent.ACTION_MAIN).addCategory(cat), 0)) {
-                    if (ri.activityInfo != null && !kids.contains(ri.activityInfo.packageName) && !hidden.contains(ri.activityInfo.packageName))
-                        hidden.add(ri.activityInfo.packageName);
-                }
-            }
-            dock.retainAll(kids);
             library = false; tileMenu = false; reorderButton = false; libraryButton = false;
         }
         // A festive skin comes only from a theme; config.xml has no festival.

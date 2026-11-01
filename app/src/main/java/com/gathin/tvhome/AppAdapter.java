@@ -471,7 +471,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         h.card.setVisibility(View.VISIBLE);
         h.card.setFocusable(true);
-        h.name.setText(e.name);
+        // TV68: a locked app in kids mode is dimmed and named with a padlock.
+        boolean locked = e.kind == Entry.APP && e.pkg != null && !Family.appAllowed(ctx, e.pkg);
+        h.name.setText(locked ? "🔒 " + e.name : e.name);
+        h.banner.setAlpha(locked ? 0.4f : 1f);
+        h.icon.setAlpha(locked ? 0.4f : 1f);
         // The dock has no labels, unless always_show_names asks for them (DockDecoration then makes room in the band).
         // In a single row every tile is the dock's kind: the big title above names it.
         boolean dockKind = dockRow && (singleRow || position < dockSize);
@@ -523,6 +527,17 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     /** Opens the tile's activity by explicit component, with no extras: a card can name nothing else. */
     private void launch(Entry e) {
+        if (e.kind == Entry.APP && e.pkg != null && !Family.appAllowed(ctx, e.pkg) && ctx instanceof Activity) {
+            Family.askToOpenApp((Activity) ctx, e.pkg, e.label, () -> {
+                notifyDataSetChanged();
+                openTile(e);
+            });
+            return;
+        }
+        openTile(e);
+    }
+
+    private void openTile(Entry e) {
         if (e.kind == Entry.HOME_SETTINGS) {
             ctx.startActivity(new Intent(ctx, HomeSettingsActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));

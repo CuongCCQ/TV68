@@ -164,6 +164,8 @@
     <string name="next">Tiếp</string>
     <string name="tv68_on">Bật</string>
     <string name="unlock_title">Mở khoá trong</string>
+    <string name="app_locked_title">🔒 %1$s — nhập PIN</string>
+    <string name="app_unlock_for">Cho mở %1$s trong</string>
     <string name="unlock_minutes">🔓 %1$d phút</string>
     <string name="unlock_hours">🔓 %1$d giờ</string>
     <string name="unlocked_until">Bật · đang tạm mở đến %1$s</string>

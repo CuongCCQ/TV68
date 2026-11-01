@@ -966,6 +966,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         super.onResume();
         // TV68: a timed unlock ran out (or was cut short in settings) while Home was away: rebuild locked.
         if (Family.kidsLocked(this) != kidsLockedAtCreate) { recreate(); return; }
+        if (kidsLockedAtCreate && adapter != null) adapter.notifyDataSetChanged();   // per-app unlocks that ran out
         if (weatherTicker != null) weatherTicker.start();
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
