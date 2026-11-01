@@ -794,6 +794,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             ((TextView) btnSettings).setText(R.string.kids_mode_on);
         }
         weatherTicker = new Weather.Ticker(findViewById(R.id.weather));
+        askForLockedApp(getIntent());
         if (getResources().getBoolean(R.bool.mac_dock)) {
             // TV68: Dock at the bottom. The grid keeps its width; only its height collapses to its rows.
             android.widget.FrameLayout.LayoutParams glp = (android.widget.FrameLayout.LayoutParams) grid.getLayoutParams();
@@ -936,6 +937,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (askForLockedApp(intent)) return;
         if (openLauncherSettingsIfAsked(intent)) return;
         if (openInputsIfAsked(intent)) return;
         if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
@@ -1059,6 +1061,31 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** Rebuilds the tiles (and the module cards), then puts focus back where it was. */
     private boolean kidsLockedAtCreate;
+
+    /**
+     * TV68: KidsGuardService sent Home here because a locked app was opened from the remote. Ask for the PIN and a
+     * time limit; on success open that app again.
+     */
+    private boolean askForLockedApp(Intent intent) {
+        final String pkg = intent == null ? null : intent.getStringExtra(KidsGuardService.EXTRA_LOCKED_PKG);
+        if (pkg == null) return false;
+        intent.removeExtra(KidsGuardService.EXTRA_LOCKED_PKG);
+        if (Family.appAllowed(this, pkg)) return true;
+        android.content.pm.PackageManager pm = getPackageManager();
+        String label = pkg;
+        try { label = String.valueOf(pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0))); } catch (Exception ignored) { }
+        final String name = label;
+        root.postDelayed(() -> Family.askToOpenApp(this, pkg, name, () -> {
+            if (adapter != null) adapter.notifyDataSetChanged();
+            Intent open = pm.getLeanbackLaunchIntentForPackage(pkg);
+            if (open == null) open = pm.getLaunchIntentForPackage(pkg);
+            if (open == null && "com.android.tv.settings".equals(pkg)) open = new Intent(android.provider.Settings.ACTION_SETTINGS);
+            if (open != null) {
+                try { startActivity(open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+            }
+        }), 400);
+        return true;
+    }
 
     private Weather.Ticker weatherTicker;
     private static final int PHOTO_PERMISSION_REQUEST = 4068;

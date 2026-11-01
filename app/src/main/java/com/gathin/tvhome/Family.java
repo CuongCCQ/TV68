@@ -5,8 +5,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
-import android.text.InputType;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
@@ -117,8 +115,8 @@ final class Family {
         android.widget.LinearLayout box = new android.widget.LinearLayout(a);
         box.setOrientation(android.widget.LinearLayout.VERTICAL);
         box.setPadding((int) (24 * dp), (int) (8 * dp), (int) (24 * dp), (int) (8 * dp));
-        EditText pin = pinField(a, a.getString(R.string.pin_hint));
-        box.addView(pin);
+        PinPad pin = new PinPad(a);
+        box.addView(pin.view);
         android.widget.TextView hint = new android.widget.TextView(a);
         hint.setText(R.string.choose_time_hint);
         hint.setPadding(0, (int) (12 * dp), 0, (int) (4 * dp));
@@ -137,10 +135,10 @@ final class Family {
             b.setText(m == CHOSE_SETTINGS ? a.getString(R.string.tv68_settings_short)
                     : m < 60 ? a.getString(R.string.unlock_minutes, m) : a.getString(R.string.unlock_hours, m / 60));
             b.setOnClickListener(v -> {
-                if (!checkPin(a, pin.getText().toString())) {
+                if (!checkPin(a, pin.get())) {
                     Toast.makeText(a, R.string.pin_wrong, Toast.LENGTH_SHORT).show();
-                    pin.setText("");
-                    pin.requestFocus();
+                    pin.clear();
+                    pin.focus();
                     return;
                 }
                 dialog.dismiss();
@@ -148,11 +146,9 @@ final class Family {
             });
             row.addView(b, new android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         }
-        // After typing the PIN, the keyboard's Done/Enter moves straight to the first time button.
-        pin.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_NEXT);
-        pin.setOnEditorActionListener((v, actionId, ev) -> { row.getChildAt(0).requestFocus(); return true; });
+        pin.listenTo(dialog);
         dialog.show();
-        pin.requestFocus();
+        pin.focus();
     }
 
     /** PIN and how long in one dialog; runs onOpen once the app is unlocked. */
@@ -238,38 +234,48 @@ final class Family {
         } catch (Exception e) { return ""; }
     }
 
-    private static EditText pinField(Context ctx, String hint) {
-        EditText e = new EditText(ctx);
-        e.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        e.setHint(hint);
-        return e;
-    }
 
-    /** Asks for the PIN; runs onOk when it matches (or at once when no PIN is set). */
+    /** Asks for the PIN on the number pad; runs onOk when it matches (or at once when no PIN is set). */
     static void verifyPin(Activity a, String title, Runnable onOk) {
         if (!hasPin(a)) { onOk.run(); return; }
-        EditText in = pinField(a, a.getString(R.string.pin_hint));
-        new AlertDialog.Builder(a).setTitle(title).setView(in)
-                .setPositiveButton(android.R.string.ok, (d, w) -> {
-                    if (checkPin(a, in.getText().toString())) onOk.run();
-                    else Toast.makeText(a, R.string.pin_wrong, Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton(android.R.string.cancel, null).show();
+        PinPad pad = new PinPad(a);
+        AlertDialog d = new AlertDialog.Builder(a).setTitle(title).setView(pad.view)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(android.R.string.ok, null).create();
+        pad.listenTo(d);
+        d.setOnShowListener(x -> d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            if (checkPin(a, pad.get())) { d.dismiss(); onOk.run(); }
+            else { Toast.makeText(a, R.string.pin_wrong, Toast.LENGTH_SHORT).show(); pad.clear(); }
+        }));
+        d.show();
+        pad.focus();
     }
 
-    /** Sets a new PIN, typed twice. */
+    /** Sets a new PIN on the number pad, typed twice. */
     static void createPin(Activity a, Runnable onDone) {
-        EditText in = pinField(a, a.getString(R.string.pin_new_hint));
-        new AlertDialog.Builder(a).setTitle(R.string.pin_set).setView(in)
-                .setPositiveButton(R.string.next, (d, w) -> {
-                    String p = in.getText().toString();
-                    if (p.length() < 4 || p.length() > 8) { Toast.makeText(a, R.string.pin_length, Toast.LENGTH_SHORT).show(); return; }
-                    EditText again = pinField(a, a.getString(R.string.pin_again));
-                    new AlertDialog.Builder(a).setTitle(R.string.pin_again).setView(again)
-                            .setPositiveButton(android.R.string.ok, (d2, w2) -> {
-                                if (again.getText().toString().equals(p)) { setPin(a, p); onDone.run(); }
-                                else Toast.makeText(a, R.string.pin_mismatch, Toast.LENGTH_SHORT).show();
-                            }).setNegativeButton(android.R.string.cancel, null).show();
-                }).setNegativeButton(android.R.string.cancel, null).show();
+        PinPad pad = new PinPad(a);
+        AlertDialog d = new AlertDialog.Builder(a).setTitle(R.string.pin_set).setView(pad.view)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.next, null).create();
+        pad.listenTo(d);
+        d.setOnShowListener(x -> d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String p = pad.get();
+            if (p.length() < 4) { Toast.makeText(a, R.string.pin_length, Toast.LENGTH_SHORT).show(); return; }
+            d.dismiss();
+            PinPad again = new PinPad(a);
+            AlertDialog d2 = new AlertDialog.Builder(a).setTitle(R.string.pin_again).setView(again.view)
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton(android.R.string.ok, null).create();
+            again.listenTo(d2);
+            d2.setOnShowListener(y -> d2.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(w -> {
+                if (again.get().equals(p)) { setPin(a, p); d2.dismiss(); onDone.run(); }
+                else { Toast.makeText(a, R.string.pin_mismatch, Toast.LENGTH_SHORT).show(); again.clear(); }
+            }));
+            d2.show();
+            again.focus();
+        }));
+        d.show();
+        pad.focus();
     }
+
 }

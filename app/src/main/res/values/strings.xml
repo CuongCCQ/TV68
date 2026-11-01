@@ -163,6 +163,8 @@
     <string name="pin_to_settings">Nhập PIN để vào cài đặt</string>
     <string name="next">Tiếp</string>
     <string name="tv68_on">Bật</string>
+    <string name="kids_guard_name">TV68 – Khoá trẻ em</string>
+    <string name="kids_guard_description">Khi bật chế độ trẻ em, chặn các app bị khoá được mở bằng nút tắt trên remote hoặc tìm kiếm giọng nói. Chỉ đọc tên app vừa mở, không đọc nội dung màn hình.</string>
     <string name="unlock_title">Mở khoá toàn màn hình</string>
     <string name="choose_time_hint">Nhập PIN rồi chọn thời gian:</string>
     <string name="tv68_settings_short">⚙️ Cài đặt</string>
