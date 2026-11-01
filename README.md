@@ -56,7 +56,8 @@ Open Launcher settings (the gear pill) → *Apps for kids* → tick the allowed 
 ## Build
 
 Every push to `main` builds the APK with GitHub Actions and commits it to `release/TVHome.apk`, so the
-link above is always the latest build. Locally: open the folder in Android Studio, or `./gradlew assembleRelease`.
+link above is always the latest build. Builds are signed with a fixed key kept in the repository's Actions
+secrets (`TV68_KEYSTORE`, `TV68_KEY_PASS`), so each new APK installs over the previous one. Locally: open the folder in Android Studio, or `./gradlew assembleRelease`.
 
 ## What changed from CleanYourTV
 
