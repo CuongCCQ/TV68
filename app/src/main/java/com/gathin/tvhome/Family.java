@@ -104,17 +104,63 @@ final class Family {
         MAIN.postDelayed(relock, minutes * 60_000L + 500);
     }
 
-    /** PIN, then how long; runs onOpen once the app is unlocked. */
+    static final int[] UNLOCK_MINUTES = {15, 30, 60, 120};
+    /** Passed to the callback of pinAndDuration when "Settings" was chosen instead of a time. */
+    static final int CHOSE_SETTINGS = -1;
+
+    /**
+     * One dialog: the PIN field and, under it, one button per time limit (plus Settings when asked).
+     * The callback gets the minutes, or CHOSE_SETTINGS, only when the PIN is right.
+     */
+    static void pinAndDuration(Activity a, String title, boolean withSettings, java.util.function.IntConsumer onChoice) {
+        float dp = a.getResources().getDisplayMetrics().density;
+        android.widget.LinearLayout box = new android.widget.LinearLayout(a);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        box.setPadding((int) (24 * dp), (int) (8 * dp), (int) (24 * dp), (int) (8 * dp));
+        EditText pin = pinField(a, a.getString(R.string.pin_hint));
+        box.addView(pin);
+        android.widget.TextView hint = new android.widget.TextView(a);
+        hint.setText(R.string.choose_time_hint);
+        hint.setPadding(0, (int) (12 * dp), 0, (int) (4 * dp));
+        box.addView(hint);
+        android.widget.LinearLayout row = new android.widget.LinearLayout(a);
+        row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        box.addView(row);
+        final AlertDialog dialog = new AlertDialog.Builder(a).setTitle(title).setView(box)
+                .setNegativeButton(android.R.string.cancel, null).create();
+        java.util.List<Integer> choices = new java.util.ArrayList<>();
+        for (int m : UNLOCK_MINUTES) choices.add(m);
+        if (withSettings) choices.add(CHOSE_SETTINGS);
+        for (int m : choices) {
+            android.widget.Button b = new android.widget.Button(a);
+            b.setAllCaps(false);
+            b.setText(m == CHOSE_SETTINGS ? a.getString(R.string.tv68_settings_short)
+                    : m < 60 ? a.getString(R.string.unlock_minutes, m) : a.getString(R.string.unlock_hours, m / 60));
+            b.setOnClickListener(v -> {
+                if (!checkPin(a, pin.getText().toString())) {
+                    Toast.makeText(a, R.string.pin_wrong, Toast.LENGTH_SHORT).show();
+                    pin.setText("");
+                    pin.requestFocus();
+                    return;
+                }
+                dialog.dismiss();
+                onChoice.accept(m);
+            });
+            row.addView(b, new android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        }
+        // After typing the PIN, the keyboard's Done/Enter moves straight to the first time button.
+        pin.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_NEXT);
+        pin.setOnEditorActionListener((v, actionId, ev) -> { row.getChildAt(0).requestFocus(); return true; });
+        dialog.show();
+        pin.requestFocus();
+    }
+
+    /** PIN and how long in one dialog; runs onOpen once the app is unlocked. */
     static void askToOpenApp(Activity a, String pkg, String label, Runnable onOpen) {
-        verifyPin(a, a.getString(R.string.app_locked_title, label), () -> {
-            final int[] minutes = {15, 30, 60, 120};
-            CharSequence[] items = new CharSequence[minutes.length];
-            for (int i = 0; i < minutes.length; i++)
-                items[i] = minutes[i] < 60 ? a.getString(R.string.unlock_minutes, minutes[i]) : a.getString(R.string.unlock_hours, minutes[i] / 60);
-            new AlertDialog.Builder(a).setTitle(a.getString(R.string.app_unlock_for, label)).setItems(items, (d, i) -> {
-                unlockAppFor(a, pkg, minutes[i]);
-                onOpen.run();
-            }).show();
+        if (!hasPin(a)) { onOpen.run(); return; }
+        pinAndDuration(a, a.getString(R.string.app_locked_title, label), false, minutes -> {
+            unlockAppFor(a, pkg, minutes);
+            onOpen.run();
         });
     }
 

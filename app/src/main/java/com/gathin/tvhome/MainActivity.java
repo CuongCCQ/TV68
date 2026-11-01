@@ -782,7 +782,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         kidsLockedAtCreate = Family.kidsLocked(this);
         Family.scheduleRelock(this);
         if (kidsLockedAtCreate) {
-            View.OnClickListener gate = v -> Family.verifyPin(this, getString(R.string.pin_to_settings), this::showUnlockMenu);
+            View.OnClickListener gate = v -> Family.pinAndDuration(this, getString(R.string.unlock_title), true, minutes -> {
+                if (minutes == Family.CHOSE_SETTINGS)
+                    startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
+                else { Family.unlockFor(this, minutes); recreate(); }
+            });
             btnSettings.setOnClickListener(gate);
             btnSettings.setOnLongClickListener(v -> { gate.onClick(v); return true; });
             btnReorder.setVisibility(View.GONE);
@@ -1055,23 +1059,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** Rebuilds the tiles (and the module cards), then puts focus back where it was. */
     private boolean kidsLockedAtCreate;
-
-    /** TV68: after the PIN, open Home for a while or go to settings (where kids mode can be turned off for good). */
-    private void showUnlockMenu() {
-        final int[] minutes = {15, 30, 60, 120};
-        CharSequence[] items = new CharSequence[minutes.length + 1];
-        for (int i = 0; i < minutes.length; i++)
-            items[i] = minutes[i] < 60 ? getString(R.string.unlock_minutes, minutes[i]) : getString(R.string.unlock_hours, minutes[i] / 60);
-        items[minutes.length] = getString(R.string.launcher_settings);
-        new android.app.AlertDialog.Builder(this).setTitle(R.string.unlock_title).setItems(items, (d, i) -> {
-            if (i < minutes.length) {
-                Family.unlockFor(this, minutes[i]);
-                recreate();
-            } else {
-                startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
-            }
-        }).show();
-    }
 
     private Weather.Ticker weatherTicker;
     private static final int PHOTO_PERMISSION_REQUEST = 4068;
