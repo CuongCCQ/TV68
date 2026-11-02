@@ -134,18 +134,21 @@ final class Family {
 
     static void pinAndDuration(Activity a, String title, boolean withSettings, Runnable askParent, java.util.function.IntConsumer onChoice) {
         float dp = a.getResources().getDisplayMetrics().density;
+        // Side by side so it fits a TV screen: the number pad on the left, the time buttons (and "Ask parents")
+        // stacked on the right. Stacked under each other they ran off the bottom of a 1080p screen.
         android.widget.LinearLayout box = new android.widget.LinearLayout(a);
-        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        box.setOrientation(android.widget.LinearLayout.HORIZONTAL);
         box.setPadding((int) (24 * dp), (int) (8 * dp), (int) (24 * dp), (int) (8 * dp));
         PinPad pin = new PinPad(a);
         box.addView(pin.view);
+        android.widget.LinearLayout row = new android.widget.LinearLayout(a);
+        row.setOrientation(android.widget.LinearLayout.VERTICAL);
+        row.setPadding((int) (28 * dp), 0, 0, 0);
         android.widget.TextView hint = new android.widget.TextView(a);
         hint.setText(R.string.choose_time_hint);
-        hint.setPadding(0, (int) (12 * dp), 0, (int) (4 * dp));
-        box.addView(hint);
-        android.widget.LinearLayout row = new android.widget.LinearLayout(a);
-        row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
-        box.addView(row);
+        hint.setPadding(0, (int) (4 * dp), 0, (int) (8 * dp));
+        row.addView(hint);
+        box.addView(row, new android.widget.LinearLayout.LayoutParams((int) (240 * dp), android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
         final AlertDialog dialog = new AlertDialog.Builder(a).setTitle(title).setView(box)
                 .setNegativeButton(android.R.string.cancel, null).create();
         java.util.List<Integer> choices = new java.util.ArrayList<>();
@@ -166,14 +169,16 @@ final class Family {
                 dialog.dismiss();
                 onChoice.accept(m);
             });
-            row.addView(b, new android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+            row.addView(b, new android.widget.LinearLayout.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, (int) (52 * dp)));
         }
         if (askParent != null) {
             android.widget.Button ask = new android.widget.Button(a);
             ask.setAllCaps(false);
             ask.setText(R.string.ask_parent);
             ask.setOnClickListener(v -> askParent.run());
-            box.addView(ask, new android.widget.LinearLayout.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, (int) (56 * dp));
+            lp.topMargin = (int) (12 * dp);
+            row.addView(ask, lp);
         }
         pin.listenTo(dialog);
         openPinDialog = new java.lang.ref.WeakReference<>(dialog);
