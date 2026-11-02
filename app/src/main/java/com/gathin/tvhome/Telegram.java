@@ -89,7 +89,19 @@ final class Telegram {
         return true;
     }
 
-    // ---------- Polling (run by KidsGuardService while it is enabled) ----------
+    // ---------- Polling ----------
+
+    private static Poller running;
+
+    /**
+     * Starts the one poller of this process if it is not running yet. Called by Home and by KidsGuardService:
+     * the service keeps the process alive in the background, Home makes sure polling starts even without it.
+     */
+    static synchronized void ensurePolling(Context ctx) {
+        if (running != null && running.isAlive()) return;
+        running = new Poller(ctx);
+        running.start();
+    }
 
     static final class Poller extends Thread {
         private final Context app;

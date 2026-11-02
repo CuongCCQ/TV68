@@ -795,6 +795,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         weatherTicker = new Weather.Ticker(findViewById(R.id.weather));
         askForLockedApp(getIntent());
+        Telegram.ensurePolling(this);
         if (getResources().getBoolean(R.bool.mac_dock)) {
             // TV68: Dock at the bottom. The grid keeps its width; only its height collapses to its rows.
             android.widget.FrameLayout.LayoutParams glp = (android.widget.FrameLayout.LayoutParams) grid.getLayoutParams();
